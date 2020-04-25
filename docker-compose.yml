@@ -1,0 +1,58 @@
+version: "3.7"
+
+services:
+   server:
+    container_name: nestjs_server
+    image: nestjs/server:1.0
+    build:
+      context: ./server
+      dockerfile: ./dockerfile
+    working_dir: /home/node/app
+    restart: always
+    depends_on:
+      - db
+      - pgadmin
+    env_file:
+      - ./.env
+    ports:
+      - ${SERVER_HOST}:${SERVER_CONTAINER}
+    volumes:
+      - ./server:/home/node/app
+    command: "yarn run start:dev"
+    networks:
+      - postgres
+
+  db:
+    container_name: nestjs_db
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - postgres
+
+  pgadmin:
+    container_name: nestjs_admin
+    image: dpage/pgadmin4
+    logging:
+      driver: none
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - db
+    ports:
+      - "${PGADMIN_HOST}:${PGADMIN_CONTAINER}"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  app:
+  server:
